@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"nweb/models"
 )
@@ -54,8 +53,8 @@ func (c *UserController) PostLogin() {
 	defer c.Read(resp)
 
 	//从缓存中拿数据
-	user_id := c.GetSession("user_id")
-	if user_id != nil {
+	username := c.GetSession("username")
+	if username != nil {
 		resp["code"] = models.RECODE_OK
 		resp["meg"] = models.ReCodeText(models.RECODE_OK)
 		resp["cache"] = "缓存"
@@ -81,13 +80,12 @@ func (c *UserController) PostLogin() {
 	o := orm.NewOrm()
 	user := models.User{Name: logindata["username"] , Password:Md5(logindata["password"])}
 	if err := o.Read(&user,"Name", "Password"); err != nil {
-		beego.Info(err)
 		resp["code"] = models.RECODE_DBERR
 		resp["meg"] = models.ReCodeText(models.RECODE_DBERR)
 		return
 	}
 
-	c.SetSession("user_id", user.Id)
+	c.SetSession("username", user.Name)
 
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)

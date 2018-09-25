@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+
 type User struct {
 	Id			int64
 	Name		string	`orm:"size(30);unique"`
@@ -21,7 +22,8 @@ type Domain struct {
 	Sname		string `orm:"column(server_name);unique"`
 	Port		int64  `orm:"column(port)"`
 	Root		string `orm:"column(root)"`
-	Logname		string `orm:"column(logname);unique"`
+	Logname		string `orm:"column(logname)"`
+	Status		int64  `orm:"column(status);default(1)"`
 	User		*User  `orm:"rel(fk)"`    //设置一对多关系
 
 }
@@ -43,7 +45,6 @@ func init() {
 
 	//设置连接串
 	conn := username + ":" + password + "@tcp(" + hostname + ":" + port + ")/" + dbname + "?charset=utf8"
-
 	orm.RegisterDataBase("default", "mysql", conn, 30) //连接数据库
 
 	orm.RegisterModel(new(User), new(Domain)) //注册表
