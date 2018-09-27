@@ -23,7 +23,7 @@ type Domain struct {
 	Port		int64  `orm:"column(port)"`
 	Root		string `orm:"column(root)"`
 	Logname		string `orm:"column(logname)"`
-	Status		int64  `orm:"column(status);default(1)"`
+	Status		int64  `orm:"column(status);default(1)"`	//1.表示启用, 2.表示未启用
 	User		*User  `orm:"rel(fk)"`    //设置一对多关系
 
 }

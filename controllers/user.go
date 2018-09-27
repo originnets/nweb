@@ -10,6 +10,13 @@ type UserController struct {
 	BaseController
 }
 
+//主页
+func (c * UserController)GetIndex() {
+	c.Data["Website"] = "beego.me"
+	c.Data["Email"] = "astaxie@gmail.com"
+	c.TplName = "index.tpl"
+}
+
 //注册
 func (c *UserController) PostReg() {
 	resp := make(map[string]interface{})
