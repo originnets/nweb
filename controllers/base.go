@@ -65,7 +65,7 @@ func FileExistence(f string)(bool, error){
 		return true, nil
 	}
 	if os.IsNotExist(err) {
-		return false, nil
+		return false, err
 	}
 	return false, err
 }
@@ -73,20 +73,16 @@ func FileExistence(f string)(bool, error){
 //实现删除配置文件
 func DelGenConfFile(sname string)(err error) {
 	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
-	status, err2 := FileExistence(filename)
-	if err2 != nil {
-		err = err2
-		return
-	}
-	if status == false {
+	status, err1 := FileExistence(filename)
+	if status == true {
+		if err1 := os.Remove(filename); err1 != nil {
+			err = err1
+			return
+		}
 		err = nil
 		return
 	}
-	if err1:= os.Remove(filename); err1 != nil {
-		err = err1
-		return
-	}
-	err = nil
+	err = err1
 	return
 }
 
@@ -94,22 +90,15 @@ func DelGenConfFile(sname string)(err error) {
 func MvGenConfFile(sname string)(err error) {
 	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
 	status, err2 := FileExistence(filename)
-	if err2 != nil {
-		err = err2
-		return
+	if status == true {
+		b_file := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
+		beego.Info(b_file)
+		if err1 := os.Rename(filename, b_file); err1 != nil {
+			err = err1
+			return
+		}
 	}
-	if status == false {
-		beego.Info("文件不存在")
-		err = nil
-		return
-	}
-	bakfilename := beego.AppConfig.String("bakpath") + "/"+ sname + ".conf"
-	beego.Info(bakfilename)
-	if err1:= os.Rename(filename, bakfilename); err1 != nil {
-		err = err1
-		return
-	}
-	err = nil
+	err = err2
 	return
 }
 
