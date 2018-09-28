@@ -20,6 +20,7 @@ type User struct {
 type Domain struct {
 	Id			int64
 	Sname		string `orm:"column(server_name);unique"`
+//	Cname 		string `orm:"column(config_name);unique"`
 	Port		int64  `orm:"column(port)"`
 	Root		string `orm:"column(root)"`
 	Logname		string `orm:"column(logname)"`

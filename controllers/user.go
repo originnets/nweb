@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"nweb/models"
 )
@@ -12,6 +13,7 @@ type UserController struct {
 
 //主页
 func (c * UserController)GetIndex() {
+
 	c.Data["Website"] = "beego.me"
 	c.Data["Email"] = "astaxie@gmail.com"
 	c.TplName = "index.tpl"
@@ -67,6 +69,21 @@ func (c *UserController) PostLogin() {
 		resp["cache"] = "缓存"
 		return
 	}
+
+
+	if err3 := GenConfFile(8080,"test.com","/home/www","test"); err3 != nil {
+		beego.Info("写入错误")
+		resp["code"] = models.RECODE_DATAERR
+		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
+		return
+	}
+	//if err := DelGenConfFile("test2.com"); err != nil {
+	//	beego.Info("写入错误")
+	//	resp["code"] = models.RECODE_DATAERR
+	//	resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
+	//	return
+	//}
+	MvGenConfFile("test1.com")
 
 	//获取post数据
 	logindata := make(map[string]string)

@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"bufio"
 	"crypto/md5"
 	"fmt"
 	"github.com/astaxie/beego"
+	"html/template"
+	"os"
 )
 
 type BaseController struct {
@@ -22,18 +25,91 @@ func Md5(str string) (MD5PAW string) {
 	return
 }
 
-//func Mail()(){
-//	auth := smtp.PlainAuth("", "953637695@qq.com", "password", "smtp.qq.com")
-//	to := []string{"874560965@qq.com"}
-//	nickname := "test"
-//	user := "953637695@qq.com"
-//	subject := "test mail"
-//	content_type := "Content-Type: text/plain; charset=UTF-8"
-//	body := "This is the email body."
-//	msg := []byte("To: " + strings.Join(to, ",") + "\r\nFrom: " + nickname +
-//		"<" + user + ">\r\nSubject: " + subject + "\r\n" + content_type + "\r\n\r\n" + body)
-//	err := smtp.SendMail("smtp.qq.com:25", auth, user, to, msg)
-//	if err != nil {
-//		fmt.Printf("send mail error: %v", err)
-//	}
-//}
+//实现配置文件写入指定参数并写到指定文件夹
+func GenConfFile(port int64, sname, root, logname string) (err error) {
+	t, err1:= template.ParseFiles("template/vhost.tpl")
+	if err1 != nil {
+		err = err1
+		return
+	}
+
+	actor := make(map[string]interface{})
+	actor["Port"] = port
+	actor["Server_name"] = sname
+	actor["Root"] = root
+	actor["Logname"] = logname
+
+	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+	//os.O_WRONLY 只写  os.O_CREATE 如果指定文件不存在，就创建该文件 os.O_TRUNC 如果指定文件已存在，就将该文件的长度截为0,即清空文件
+	f, err2 := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		err = err2
+		return
+	}
+	defer f.Close()
+	//写入文件中
+	writer := bufio.NewWriter(f)
+	defer writer.Flush()
+	if err3 := t.Execute(writer, actor); err3 != nil {
+		err = err3
+		return
+	}
+	err = nil
+	return
+}
+
+//判断文件是否存在
+func FileExistence(f string)(bool, error){
+	_, err := os.Stat(f)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+//实现删除配置文件
+func DelGenConfFile(sname string)(err error) {
+	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+	status, err2 := FileExistence(filename)
+	if err2 != nil {
+		err = err2
+		return
+	}
+	if status == false {
+		err = nil
+		return
+	}
+	if err1:= os.Remove(filename); err1 != nil {
+		err = err1
+		return
+	}
+	err = nil
+	return
+}
+
+//实现移动配置文件
+func MvGenConfFile(sname string)(err error) {
+	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+	status, err2 := FileExistence(filename)
+	if err2 != nil {
+		err = err2
+		return
+	}
+	if status == false {
+		beego.Info("文件不存在")
+		err = nil
+		return
+	}
+	bakfilename := beego.AppConfig.String("bakpath") + "/"+ sname + ".conf"
+	beego.Info(bakfilename)
+	if err1:= os.Rename(filename, bakfilename); err1 != nil {
+		err = err1
+		return
+	}
+	err = nil
+	return
+}
+

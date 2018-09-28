@@ -62,7 +62,6 @@ func (c *DomainController) PostAddDomain() {
 		resp["meg"] = models.ReCodeText(models.RECODE_SESSIONERR)
 		return
 	}
-
 	//获取前端传过来的数据
 	domaindata := make(map[string]string)
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &domaindata); err != nil {
@@ -122,24 +121,8 @@ func (c *DomainController) PostAddDomain() {
 		resp["meg"] = models.ReCodeText(models.RECODE_DBERR)
 		return
 	}
-
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
-
-	//实现文件写入文件
-	//t,_ := template.ParseFiles("template/vhost.tpl")
-	//actor := make(map[string]interface{})
-	//actor["Port"] = domain.Port
-	//actor["Server_name"] = domain.Sname
-	//actor["Root"] = domain.Root
-	//actor["Logname"] = domain.Logname
-	//f, _ := os.OpenFile("test.conf", os.O_RDWR|os.O_CREATE, 0766)
-	//defer f.Close()
-	//writer := bufio.NewWriter(f)
-	//defer writer.Flush()
-	//t.Execute(writer, actor)
-	//t.Execute(os.Stdout, actor)
-
 
 }
 
