@@ -83,7 +83,8 @@ func (c *UserController) PostLogin() {
 	//	resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
 	//	return
 	//}
-	MvGenConfFile("test1.com")
+	//err := MvGenConfFile("test1.com", false)
+	//beego.Info("aaa", err)
 
 	//获取post数据
 	logindata := make(map[string]string)

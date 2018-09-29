@@ -3,22 +3,25 @@ package controllers
 import (
 	"bufio"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego"
 	"html/template"
 	"os"
+	"os/exec"
 )
 
 type BaseController struct {
 	beego.Controller
 }
 
+//json数据返回
 func (c *BaseController) Read(resp map[string]interface{} ){
 	c.Data["json"] = resp
 	c.ServeJSON()
 }
 
-
+//md5密码加密
 func Md5(str string) (MD5PAW string) {
 	DATA := []byte(str)
 	MD5PAW = fmt.Sprintf("%x",md5.Sum(DATA))
@@ -65,7 +68,7 @@ func FileExistence(f string)(bool, error){
 		return true, nil
 	}
 	if os.IsNotExist(err) {
-		return false, err
+		return false, nil
 	}
 	return false, err
 }
@@ -82,23 +85,71 @@ func DelGenConfFile(sname string)(err error) {
 		err = nil
 		return
 	}
+	if status == false && err1 == nil {
+		err = errors.New("文件不存在")
+		return
+	}
 	err = err1
 	return
 }
 
-//实现移动配置文件
-func MvGenConfFile(sname string)(err error) {
-	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
-	status, err2 := FileExistence(filename)
-	if status == true {
-		b_file := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
-		beego.Info(b_file)
-		if err1 := os.Rename(filename, b_file); err1 != nil {
-			err = err1
+//实现移动配置文件 当 i==true时为停用域名 i==false时为恢复域名 你
+func MvGenConfFile(sname string, b bool)(err error) {
+	if b == true  {
+		filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+		status, err1 := FileExistence(filename)
+		if status == true {
+			bfile := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
+			if err2 := os.Rename(filename, bfile); err2 != nil {
+				err = err2
+				return
+			}
+		}
+		if status == false && err1 == nil {
+			err = errors.New("文件不存在")
 			return
 		}
+		err = err1
+		return
+	} else {
+		bfile := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
+		status, err1 := FileExistence(bfile)
+		if status == true {
+			filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+			if err2 := os.Rename(bfile, filename); err2 != nil {
+				err = err2
+				return
+			}
+		}
+		if status == false && err1 == nil {
+			err = errors.New("文件不存在")
+			return
+		}
+		err = err1
+		return
 	}
-	err = err2
-	return
 }
 
+
+//实现重启nginx
+func RestartNginx()(err error) {
+	bin := beego.AppConfig.String("nginxevn")
+
+	comm :=  bin + "-t"
+	test := exec.Command("/bin/bash", "-c", comm)
+	err1 := test.Run()
+	if err1 != nil {
+		err = errors.New("测试失败")
+		return
+	}
+
+	comm = bin + "-s reload"
+	cmd := exec.Command("/bin/bash", "-c", comm)
+	err2 := cmd.Run()
+	if err2 != nil {
+		err = errors.New("重启失败")
+		return
+	}
+	err = nil
+	return
+}
