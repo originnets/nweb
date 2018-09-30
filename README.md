@@ -1,4 +1,4 @@
-#娱乐使用
+#娱乐
 ## 1. api 
 - 	post	/api/v1.0/user/reg		注册
 
