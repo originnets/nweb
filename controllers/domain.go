@@ -121,6 +121,24 @@ func (c *DomainController) PostAddDomain() {
 		resp["meg"] = models.ReCodeText(models.RECODE_DBERR)
 		return
 	}
+	if err := GenConfFile(domain.Port,domain.Sname, domain.Root, domain.Logname,); err != nil {
+		resp["code"] = 113
+		resp["meg"] = "添加域名失败"
+		return
+	}
+	if newstatus == 1 {
+		if err := MvGenConfFile(domain.Sname, false); err != nil {
+			resp["code"] = 112
+			resp["meg"] = "移动域名失败"
+			return
+		}
+		if err := RestartNginx(); err != nil {
+			resp["code"] = 111
+			resp["meg"] = "启动失败"
+			return
+		}
+	}
+
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
 
@@ -168,6 +186,11 @@ func (c *DomainController) GetDeleteDomain() {
 		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
 		return
 	}
+	if domain.Status == 1 {
+		resp["code"] = 1234
+		resp["meg"] = "请先停用该域名"
+		return
+	}
 	num, err := o.Delete(&domain)
 	if err != nil {
 		resp["code"] = models.RECODE_DATAERR
@@ -177,6 +200,11 @@ func (c *DomainController) GetDeleteDomain() {
 	if num == 0 {
 		resp["code"] = models.RECODE_DATAERR
 		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
+		return
+	}
+	if err := DelGenConfFile(domain.Sname); err != nil {
+		resp["code"] = 1234
+		resp["meg"] = "删除失败"
 		return
 	}
 	resp["code"] = models.RECODE_OK
@@ -233,17 +261,28 @@ func (c *DomainController) GetDiscontinuationDomain() {
 		return
 	}
 	if num == 0 {
-		resp["code"] = models.RECODE_DATAERR
-		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
+		resp["code"] = 1234
+		resp["meg"] = "改域名已处于停用状态,请勿操作"
 		return
 	}
+	if err := MvGenConfFile(domain.Sname, true); err != nil {
+		resp["code"] = 112
+		resp["meg"] = "移动域名失败"
+		return
+	}
+	if err := RestartNginx(); err != nil {
+		resp["code"] = 111
+		resp["meg"] = "启动失败"
+		return
+	}
+
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
 
 
 }
 
-//启用/恢复使用域名
+//启用域名
 func (c *DomainController) GetRecoveryDomain() {
 	resp := make(map[string]interface{})
 	defer c.Read(resp)
@@ -293,16 +332,23 @@ func (c *DomainController) GetRecoveryDomain() {
 		return
 	}
 	if num == 0 {
-		resp["code"] = models.RECODE_DATAERR
-		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
+		resp["code"] = 1234
+		resp["meg"] = "改域名已处于使用状态,请勿操作"
+		return
+	}
+	if err := MvGenConfFile(domain.Sname, false); err != nil {
+		resp["code"] = 112
+		resp["meg"] = "移动域名失败"
+		return
+	}
+	if err := RestartNginx(); err != nil {
+		resp["code"] = 111
+		resp["meg"] = "启动失败"
 		return
 	}
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
-
-
 }
-
 
 //更改域名信息
 func (c *DomainController) PostChangeDomain() {
@@ -328,7 +374,6 @@ func (c *DomainController) PostChangeDomain() {
 	server_name := domaindata["server_name"]
 	port := domaindata["port"]
 	root := domaindata["root"]
-	status := domaindata["status"]
 	logname := domaindata["logname"]
 
 	if server_name == "" && port == "" && root == "" && logname == "" {
@@ -366,6 +411,16 @@ func (c *DomainController) PostChangeDomain() {
 		resp["meg"] = models.ReCodeText(models.RECODE_NODATA)
 		return
 	}
+	if domain.Status == 1 {
+		resp["code"] = 1234
+		resp["meg"] = "请先停用该域名"
+		return
+	}
+	if err := DelGenConfFile(domain.Sname); err != nil {
+		resp["code"] = 113
+		resp["meg"] = "清除原域名信息失败"
+		return
+	}
 	if server_name != "" {
 		domain.Sname = server_name
 	}
@@ -380,16 +435,6 @@ func (c *DomainController) PostChangeDomain() {
 		domain.Port = int64(newport)
 	}
 
-	if status != "" {
-		newstatus, err := strconv.Atoi(status)
-		if  err != nil {
-			resp["code"] = models.RECODE_DATAERR
-			resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
-			return
-		}
-		domain.Status = int64(newstatus)
-	}
-
 	if root != "" {
 		domain.Root = root
 	}
@@ -398,17 +443,20 @@ func (c *DomainController) PostChangeDomain() {
 		domain.Logname = logname
 	}
 
-	if server_name == "" || port == "" || root == "" || logname == "" || status == "" {
+	if server_name == "" || port == "" || root == "" || logname == "" {
 		domain.User = &user
 	}
-
 	_, err = o.Update(&domain)
 	if err != nil {
 		resp["code"] = models.RECODE_DATAERR
 		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
 		return
 	}
-
+	if err := GenConfFile(domain.Port, domain.Sname, domain.Root, domain.Logname,); err != nil {
+		resp["code"] = 113
+		resp["meg"] = "域名修改失败"
+		return
+	}
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
 }

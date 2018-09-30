@@ -42,7 +42,7 @@ func GenConfFile(port int64, sname, root, logname string) (err error) {
 	actor["Root"] = root
 	actor["Logname"] = logname
 
-	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+	filename := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
 	//os.O_WRONLY 只写  os.O_CREATE 如果指定文件不存在，就创建该文件 os.O_TRUNC 如果指定文件已存在，就将该文件的长度截为0,即清空文件
 	f, err2 := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -75,7 +75,7 @@ func FileExistence(f string)(bool, error){
 
 //实现删除配置文件
 func DelGenConfFile(sname string)(err error) {
-	filename := beego.AppConfig.String("path") + "/" + sname + ".conf"
+	filename := beego.AppConfig.String("bakpath") + "/" + sname + ".conf"
 	status, err1 := FileExistence(filename)
 	if status == true {
 		if err1 := os.Remove(filename); err1 != nil {

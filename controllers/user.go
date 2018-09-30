@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"nweb/models"
 )
@@ -69,22 +68,6 @@ func (c *UserController) PostLogin() {
 		resp["cache"] = "缓存"
 		return
 	}
-
-
-	if err3 := GenConfFile(8080,"test.com","/home/www","test"); err3 != nil {
-		beego.Info("写入错误")
-		resp["code"] = models.RECODE_DATAERR
-		resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
-		return
-	}
-	//if err := DelGenConfFile("test2.com"); err != nil {
-	//	beego.Info("写入错误")
-	//	resp["code"] = models.RECODE_DATAERR
-	//	resp["meg"] = models.ReCodeText(models.RECODE_DATAERR)
-	//	return
-	//}
-	//err := MvGenConfFile("test1.com", false)
-	//beego.Info("aaa", err)
 
 	//获取post数据
 	logindata := make(map[string]string)
