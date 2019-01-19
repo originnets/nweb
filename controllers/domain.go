@@ -37,8 +37,8 @@ func (c *DomainController) GetListDomain() {
 	resp["code"] = models.RECODE_OK
 	resp["meg"] = models.ReCodeText(models.RECODE_OK)
 	tmpList := make(map[int]interface{})
-	listData := make(map[string]interface{})
 	for index, domain := range domains {
+		listData := make(map[string]interface{})
 		listData["id"] = domain.Id
 		listData["port"] = domain.Port
 		listData["server_name"] = domain.Sname
